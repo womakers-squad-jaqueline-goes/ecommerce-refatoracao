@@ -38,3 +38,23 @@ jobs:
           fi
 
           echo "Fluxo de branches válido."
+
+  build:
+    name: Build .NET
+    runs-on: ubuntu-latest
+    needs: validate
+
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v5
+
+      - name: Configurar .NET 10
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restaurar dependências
+        run: dotnet restore EcommercePiorApi/EcommercePiorApi.csproj
+
+      - name: Compilar projeto
+        run: dotnet build EcommercePiorApi/EcommercePiorApi.csproj --configuration Release --no-restore
