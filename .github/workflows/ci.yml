@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validar branches
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validar origem e destino do PR
+        env:
+          BASE_BRANCH: ${{ github.base_ref }}
+          HEAD_BRANCH: ${{ github.head_ref }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          CURRENT_REPO: ${{ github.repository }}
+        run: |
+          if [[ "$BASE_BRANCH" == "develop" ]]; then
+            if [[ "$HEAD_BRANCH" != feature/* || "$HEAD_BRANCH" == "feature/" ]]; then
+              echo "::error::Apenas branches feature/* podem abrir PR para develop."
+              exit 1
+            fi
+
+          elif [[ "$BASE_BRANCH" == "main" ]]; then
+            if [[ "$HEAD_BRANCH" != "develop" || "$HEAD_REPO" != "$CURRENT_REPO" ]]; then
+              echo "::error::Apenas a branch develop deste repositório pode abrir PR para main."
+              exit 1
+            fi
+
+          else
+            echo "::error::O destino do PR deve ser develop ou main."
+            exit 1
+          fi
+
+          echo "Fluxo de branches válido."
