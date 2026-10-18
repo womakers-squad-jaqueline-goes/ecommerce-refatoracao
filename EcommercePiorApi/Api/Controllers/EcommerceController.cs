@@ -1,19 +1,30 @@
+using EcommercePiorApi.Application.DTOs.Requests;
+using EcommercePiorApi.Domain.Entities;
+using EcommercePiorApi.Infrastructure.Integrations;
+using EcommercePiorApi.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace PiorEcommerceDoMundo;
+namespace EcommercePiorApi.Api.Controllers;
 
 // um unico controller cuidando de produtos, estoque, pedidos, pagamento e logistica.
 // nada de camadas, nada de injecao de dependencia, nada de SOLID. de proposito.
 [ApiController]
 public class EcommerceController : ControllerBase
 {
+    private readonly AppDbContext _db;
+
+    public EcommerceController(AppDbContext db)
+    {
+        _db = db;
+    }
+
     // ==================== PRODUTOS (CRUD) ====================
 
     [HttpGet("api/produtos")]
     public IActionResult ListarProdutos()
     {
-        var db = new AppDbContext();
+        var db = _db;
         var lista = db.Produtos.ToList();
         return Ok(lista);
     }
@@ -21,7 +32,7 @@ public class EcommerceController : ControllerBase
     [HttpGet("api/produtos/{id}")]
     public IActionResult BuscarProduto(int id)
     {
-        var db = new AppDbContext();
+        var db = _db;
         var produto = db.Produtos.Find(id);
         if (produto == null) return NotFound();
         return Ok(produto);
@@ -39,7 +50,7 @@ public class EcommerceController : ControllerBase
             return BadRequest("preco invalido");
         }
 
-        var db = new AppDbContext();
+        var db = _db;
         db.Produtos.Add(produto);
         db.SaveChanges();
         Utils.Log("Produto criado: " + produto.Nome);
@@ -49,7 +60,7 @@ public class EcommerceController : ControllerBase
     [HttpPut("api/produtos/{id}")]
     public IActionResult AtualizarProduto(int id, [FromBody] Produto produto)
     {
-        var db = new AppDbContext();
+        var db = _db;
         var existente = db.Produtos.Find(id);
         if (existente == null) return NotFound();
 
@@ -65,7 +76,7 @@ public class EcommerceController : ControllerBase
     [HttpDelete("api/produtos/{id}")]
     public IActionResult DeletarProduto(int id)
     {
-        var db = new AppDbContext();
+        var db = _db;
         var existente = db.Produtos.Find(id);
         if (existente == null) return NotFound();
 
@@ -80,7 +91,7 @@ public class EcommerceController : ControllerBase
     public IActionResult ListarEstoque()
     {
         // logica praticamente igual a ListarProdutos, copiada e colada aqui
-        var db = new AppDbContext();
+        var db = _db;
         var lista = db.Produtos.ToList();
         var resultado = new List<object>();
         foreach (var p in lista)
@@ -93,7 +104,7 @@ public class EcommerceController : ControllerBase
     [HttpPost("api/estoque/reabastecer/{produtoId}/{quantidade}")]
     public IActionResult ReabastecerEstoque(int produtoId, int quantidade)
     {
-        var db = new AppDbContext();
+        var db = _db;
         var produto = db.Produtos.Find(produtoId);
         if (produto == null) return NotFound();
 
@@ -121,7 +132,7 @@ public class EcommerceController : ControllerBase
             return BadRequest("pedido sem itens");
         }
 
-        var db = new AppDbContext();
+        var db = _db;
 
         var pedido = new Pedido();
         pedido.ClienteNome = request.ClienteNome;
@@ -203,7 +214,7 @@ public class EcommerceController : ControllerBase
     [HttpGet("api/pedidos")]
     public IActionResult ListarPedidos()
     {
-        var db = new AppDbContext();
+        var db = _db;
         var lista = db.Pedidos.Include(p => p.Itens).ToList();
         return Ok(lista);
     }
@@ -211,7 +222,7 @@ public class EcommerceController : ControllerBase
     [HttpGet("api/pedidos/{id}")]
     public IActionResult BuscarPedido(int id)
     {
-        var db = new AppDbContext();
+        var db = _db;
         var pedido = db.Pedidos.Include(p => p.Itens).FirstOrDefault(p => p.Id == id);
         if (pedido == null) return NotFound();
         return Ok(pedido);
@@ -222,7 +233,7 @@ public class EcommerceController : ControllerBase
     [HttpPost("api/pagamentos/reprocessar/{pedidoId}")]
     public IActionResult ReprocessarPagamento(int pedidoId)
     {
-        var db = new AppDbContext();
+        var db = _db;
         var pedido = db.Pedidos.Include(p => p.Itens).FirstOrDefault(p => p.Id == pedidoId);
         if (pedido == null) return NotFound();
 
@@ -244,7 +255,7 @@ public class EcommerceController : ControllerBase
     [HttpPost("api/logistica/reenviar/{pedidoId}")]
     public IActionResult ReenviarLogistica(int pedidoId)
     {
-        var db = new AppDbContext();
+        var db = _db;
         var pedido = db.Pedidos.FirstOrDefault(p => p.Id == pedidoId);
         if (pedido == null) return NotFound();
 

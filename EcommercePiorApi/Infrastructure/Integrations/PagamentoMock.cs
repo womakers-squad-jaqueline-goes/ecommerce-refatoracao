@@ -1,4 +1,4 @@
-namespace PiorEcommerceDoMundo;
+namespace EcommercePiorApi.Infrastructure.Integrations;
 
 // "servico" de pagamento que na verdade eh so uma classe estatica mockada
 public static class PagamentoMock

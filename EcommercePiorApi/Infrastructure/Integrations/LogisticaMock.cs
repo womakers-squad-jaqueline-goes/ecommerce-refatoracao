@@ -1,4 +1,6 @@
-namespace PiorEcommerceDoMundo;
+﻿using EcommercePiorApi.Domain.Entities;
+
+namespace EcommercePiorApi.Infrastructure.Integrations;
 
 // "integracao" com logistica que na verdade so espera um pouco e devolve um codigo aleatorio
 public static class LogisticaMock

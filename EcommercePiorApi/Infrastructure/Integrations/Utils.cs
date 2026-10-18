@@ -1,4 +1,4 @@
-namespace PiorEcommerceDoMundo;
+namespace EcommercePiorApi.Infrastructure.Integrations;
 
 // classe utilitaria "faz-tudo": validacao, log e geracao de codigo no mesmo lugar
 public static class Utils
