@@ -9,70 +9,7 @@ namespace PiorEcommerceDoMundo;
 public class EcommerceController : ControllerBase
 {
     // ==================== PRODUTOS (CRUD) ====================
-
-    [HttpGet("api/produtos")]
-    public IActionResult ListarProdutos()
-    {
-        var db = new AppDbContext();
-        var lista = db.Produtos.ToList();
-        return Ok(lista);
-    }
-
-    [HttpGet("api/produtos/{id}")]
-    public IActionResult BuscarProduto(int id)
-    {
-        var db = new AppDbContext();
-        var produto = db.Produtos.Find(id);
-        if (produto == null) return NotFound();
-        return Ok(produto);
-    }
-
-    [HttpPost("api/produtos")]
-    public IActionResult CriarProduto([FromBody] Produto produto)
-    {
-        if (produto.Nome == null || produto.Nome == "")
-        {
-            return BadRequest("nome invalido");
-        }
-        if (produto.Preco <= 0)
-        {
-            return BadRequest("preco invalido");
-        }
-
-        var db = new AppDbContext();
-        db.Produtos.Add(produto);
-        db.SaveChanges();
-        Utils.Log("Produto criado: " + produto.Nome);
-        return Ok(produto);
-    }
-
-    [HttpPut("api/produtos/{id}")]
-    public IActionResult AtualizarProduto(int id, [FromBody] Produto produto)
-    {
-        var db = new AppDbContext();
-        var existente = db.Produtos.Find(id);
-        if (existente == null) return NotFound();
-
-        existente.Nome = produto.Nome;
-        existente.Descricao = produto.Descricao;
-        existente.Preco = produto.Preco;
-        existente.QuantidadeEstoque = produto.QuantidadeEstoque;
-        existente.Ativo = produto.Ativo;
-        db.SaveChanges();
-        return Ok(existente);
-    }
-
-    [HttpDelete("api/produtos/{id}")]
-    public IActionResult DeletarProduto(int id)
-    {
-        var db = new AppDbContext();
-        var existente = db.Produtos.Find(id);
-        if (existente == null) return NotFound();
-
-        db.Produtos.Remove(existente);
-        db.SaveChanges();
-        return Ok();
-    }
+ 
 
     // ==================== ESTOQUE ====================
 
