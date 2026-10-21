@@ -2,6 +2,8 @@ using EcommercePiorApi.Domain.Entities;
 using EcommercePiorApi.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
+using EcommercePiorApi.Application.Interfaces;
+using EcommercePiorApi.Infrastructure.Integrations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +14,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<IPagamentoService, PagamentoMock>();
 
 var connectionString = builder.Configuration.GetConnectionString("Ecommerce")
     ?? throw new InvalidOperationException(

@@ -1,21 +1,21 @@
+using EcommercePiorApi.Application.Interfaces;
+
 namespace EcommercePiorApi.Infrastructure.Integrations;
 
-// "servico" de pagamento que na verdade eh so uma classe estatica mockada
-public static class PagamentoMock
+public class PagamentoMock : IPagamentoService
 {
-    public static bool ProcessarPagamento(decimal valor, string formaPagamento)
+    public async Task<bool> ProcessarPagamentoAsync(
+        decimal valor,
+        string formaPagamento)
     {
-        Console.WriteLine("Processando pagamento de " + valor + " via " + formaPagamento);
-        Thread.Sleep(500); // simula demora do gateway de pagamento, bloqueando a thread mesmo
+        Console.WriteLine(
+            $"Processando pagamento de {valor} via {formaPagamento}");
 
-        var random = new Random();
-        var sorteio = random.Next(0, 100);
+        await Task.Delay(500);
 
-        // regra de negocio critica decidida no sorteio de um numero aleatorio
-        if (formaPagamento == "cartao" && sorteio < 10)
-        {
-            return false;
-        }
-        return true;
+        return !string.Equals(
+            formaPagamento,
+            "recusar",
+            StringComparison.OrdinalIgnoreCase);
     }
 }

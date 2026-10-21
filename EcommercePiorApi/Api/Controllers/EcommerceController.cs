@@ -4,6 +4,7 @@ using EcommercePiorApi.Infrastructure.Integrations;
 using EcommercePiorApi.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using EcommercePiorApi.Application.Interfaces;
 
 namespace EcommercePiorApi.Api.Controllers;
 
@@ -13,10 +14,14 @@ namespace EcommercePiorApi.Api.Controllers;
 public class EcommerceController : ControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly IPagamentoService _pagamentoService;
 
-    public EcommerceController(AppDbContext db)
+    public EcommerceController(
+        AppDbContext db,
+        IPagamentoService pagamentoService)
     {
         _db = db;
+        _pagamentoService = pagamentoService;
     }
 
     // ==================== PRODUTOS (CRUD) ====================
@@ -117,7 +122,7 @@ public class EcommerceController : ControllerBase
     // ==================== PEDIDOS (o fluxo inteiro numa unica funcao gigante) ====================
 
     [HttpPost("api/pedidos")]
-    public IActionResult CriarPedido([FromBody] PedidoRequest request)
+    public async Task<IActionResult> CriarPedido([FromBody] PedidoRequest request)
     {
         if (request.ClienteNome == null || request.ClienteNome == "")
         {
@@ -187,7 +192,8 @@ public class EcommerceController : ControllerBase
         db.Pedidos.Add(pedido);
         db.SaveChanges(); // ja salva o pedido e o estoque debitado antes mesmo de saber se o pagamento passa
 
-        bool pagamentoOk = PagamentoMock.ProcessarPagamento(total, request.FormaPagamento);
+        bool pagamentoOk = await _pagamentoService.ProcessarPagamentoAsync(
+    total, request.FormaPagamento);
 
         if (!pagamentoOk)
         {
@@ -201,7 +207,7 @@ public class EcommerceController : ControllerBase
         pedido.Status = "Pago";
         db.SaveChanges();
 
-        var codigoRastreio = LogisticaMock.EnviarAsync(pedido).Result; // chamada assincrona usada de forma bloqueante
+        var codigoRastreio = await LogisticaMock.EnviarAsync(pedido);
         pedido.CodigoRastreio = codigoRastreio;
         pedido.Status = "Enviado";
         db.SaveChanges();
@@ -231,13 +237,15 @@ public class EcommerceController : ControllerBase
     // ==================== PAGAMENTO (endpoint separado, mas com logica duplicada do CriarPedido) ====================
 
     [HttpPost("api/pagamentos/reprocessar/{pedidoId}")]
-    public IActionResult ReprocessarPagamento(int pedidoId)
+    public async Task<IActionResult> ReprocessarPagamento(int pedidoId)
     {
         var db = _db;
         var pedido = db.Pedidos.Include(p => p.Itens).FirstOrDefault(p => p.Id == pedidoId);
         if (pedido == null) return NotFound();
 
-        bool ok = PagamentoMock.ProcessarPagamento(pedido.ValorTotal, pedido.FormaPagamento);
+        bool ok = await _pagamentoService.ProcessarPagamentoAsync(
+     pedido.ValorTotal, pedido.FormaPagamento);
+
         if (!ok)
         {
             pedido.Status = "Falhou";
@@ -253,13 +261,13 @@ public class EcommerceController : ControllerBase
     // ==================== LOGISTICA (idem, copiado do fluxo de criar pedido) ====================
 
     [HttpPost("api/logistica/reenviar/{pedidoId}")]
-    public IActionResult ReenviarLogistica(int pedidoId)
+    public async Task<IActionResult> ReenviarLogistica(int pedidoId)
     {
         var db = _db;
         var pedido = db.Pedidos.FirstOrDefault(p => p.Id == pedidoId);
         if (pedido == null) return NotFound();
 
-        var codigo = LogisticaMock.EnviarAsync(pedido).Result;
+       var codigo = await LogisticaMock.EnviarAsync(pedido);
         pedido.CodigoRastreio = codigo;
         pedido.Status = "Enviado";
         db.SaveChanges();
