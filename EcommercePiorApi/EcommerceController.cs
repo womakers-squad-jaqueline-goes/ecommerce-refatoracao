@@ -9,36 +9,13 @@ namespace PiorEcommerceDoMundo;
 public class EcommerceController : ControllerBase
 {
     // ==================== PRODUTOS (CRUD) ====================
- 
+
 
     // ==================== ESTOQUE ====================
 
-    [HttpGet("api/estoque")]
-    public IActionResult ListarEstoque()
-    {
-        // logica praticamente igual a ListarProdutos, copiada e colada aqui
-        var db = new AppDbContext();
-        var lista = db.Produtos.ToList();
-        var resultado = new List<object>();
-        foreach (var p in lista)
-        {
-            resultado.Add(new { produto = p.Nome, quantidade = p.QuantidadeEstoque });
-        }
-        return Ok(resultado);
-    }
 
-    [HttpPost("api/estoque/reabastecer/{produtoId}/{quantidade}")]
-    public IActionResult ReabastecerEstoque(int produtoId, int quantidade)
-    {
-        var db = new AppDbContext();
-        var produto = db.Produtos.Find(produtoId);
-        if (produto == null) return NotFound();
 
-        produto.QuantidadeEstoque = produto.QuantidadeEstoque + quantidade;
-        db.SaveChanges();
-        Utils.Log("Estoque reabastecido produto " + produtoId);
-        return Ok(produto);
-    }
+
 
     // ==================== PEDIDOS (o fluxo inteiro numa unica funcao gigante) ====================
 
