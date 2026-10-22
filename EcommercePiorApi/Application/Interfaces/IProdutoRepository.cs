@@ -1,3 +1,5 @@
+using EcommercePiorApi.Domain.Entities;
+
 namespace PiorEcommerceDoMundo;
 
 public interface IProdutoRepository

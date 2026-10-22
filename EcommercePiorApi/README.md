@@ -26,7 +26,7 @@ http://localhost:5000/swagger/index.html
 - Pagamento mockado (`PagamentoMock`)
 - Logística mockada (`LogisticaMock`, gera código de rastreio)
 
-Tudo isso vive no mesmo projeto, sem separação por domínio.
+O projeto continua em um único `.csproj`, mas a estrutura de pastas separa API, Application, Domain e Infrastructure. Consulte o `README.md` na raiz do repositório para ver as convenções do grupo.
 
 ## Problemas propositais (para as alunas encontrarem e corrigirem)
 
