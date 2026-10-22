@@ -1,6 +1,7 @@
 using EcommercePiorApi.Domain.Entities;
 using EcommercePiorApi.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using PiorEcommerceDoMundo;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +13,9 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddDbContext<AppDbContext>();
+builder.Services.AddScoped<IProdutoRepository, ProdutoRepository>();
+builder.Services.AddScoped<IProdutoService, ProdutoService>();
 
 var connectionString = builder.Configuration.GetConnectionString("Ecommerce")
     ?? throw new InvalidOperationException(
