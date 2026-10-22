@@ -1,3 +1,5 @@
+using EcommercePiorApi.Domain.Entities;
+using EcommercePiorApi.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace PiorEcommerceDoMundo;
