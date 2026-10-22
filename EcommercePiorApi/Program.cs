@@ -16,6 +16,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>();
 builder.Services.AddScoped<IProdutoRepository, ProdutoRepository>();
 builder.Services.AddScoped<IProdutoService, ProdutoService>();
+builder.Services.AddScoped<IEstoqueService, EstoqueService>();
 
 var connectionString = builder.Configuration.GetConnectionString("Ecommerce")
     ?? throw new InvalidOperationException(
