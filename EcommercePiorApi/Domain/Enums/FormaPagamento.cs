@@ -1,11 +1,8 @@
-﻿namespace EcommercePiorApi.Domain.Enums
+﻿namespace EcommercePiorApi.Domain.Enums;
 
+public enum FormaPagamento
 {
-    public enum FormaPagamento
-    {
-        Cartao,
-        Pix,
-        Boleto
-
-    }
+    Cartao = 1,
+    Pix = 2,
+    Boleto = 3
 }
