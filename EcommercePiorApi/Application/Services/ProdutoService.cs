@@ -1,91 +1,68 @@
+using EcommercePiorApi.Application.DTOs.Requests;
+using EcommercePiorApi.Application.DTOs.Responses;
+using EcommercePiorApi.Application.Interfaces;
+using EcommercePiorApi.Application.Mappings;
 using EcommercePiorApi.Domain.Entities;
+using EcommercePiorApi.Domain.Exceptions;
 
-namespace PiorEcommerceDoMundo;
+namespace EcommercePiorApi.Application.Services;
 
 public class ProdutoService : IProdutoService
 {
-    private readonly IProdutoRepository _produtoRepository;
+    private readonly IProdutoRepository _produtos;
+    private readonly ILogger<ProdutoService> _logger;
 
-    public ProdutoService(IProdutoRepository produtoRepository)
+    public ProdutoService(IProdutoRepository produtos, ILogger<ProdutoService> logger)
     {
-        _produtoRepository = produtoRepository;
-    }
-
-    private static ProdutoResponseDto MapearParaResponse(Produto produto)
-    {
-        return new ProdutoResponseDto
-        {
-            Id = produto.Id,
-            Nome = produto.Nome,
-            Descricao = produto.Descricao,
-            Preco = produto.Preco,
-            QuantidadeEstoque = produto.QuantidadeEstoque,
-            Ativo = produto.Ativo
-        };
+        _produtos = produtos;
+        _logger = logger;
     }
 
     public async Task<List<ProdutoResponseDto>> ListarAsync()
-    {
-        var produtos = await _produtoRepository.ListarAsync();
-
-        return produtos.Select(MapearParaResponse).ToList();
-    }
+        => (await _produtos.ListarAsync()).Select(p => p.ToResponse()).ToList();
 
     public async Task<ProdutoResponseDto> BuscarPorIdAsync(int id)
-    {
-        var produto = await ObterProdutoAsync(id);
+        => (await ObterOuFalharAsync(id)).ToResponse();
 
-        return MapearParaResponse(produto);
+    public async Task<ProdutoResponseDto> CriarAsync(CriarProdutoDto dto)
+    {
+        var produto = Produto.Criar(dto.Nome, dto.Descricao, dto.Preco, dto.QuantidadeEstoque);
+
+        _produtos.Adicionar(produto);
+        await _produtos.SalvarAsync();
+
+        _logger.LogInformation("Produto {ProdutoId} criado: {Nome}", produto.Id, produto.Nome);
+        return produto.ToResponse();
     }
 
-    public async Task<ProdutoResponseDto> CriarAsync(CriarProdutoDto criarProdutoDto)
+    public async Task<ProdutoResponseDto> AtualizarAsync(int id, AtualizarProdutoDto dto)
     {
-        var produto = new Produto
-        (
-            criarProdutoDto.Nome,
-            criarProdutoDto.Descricao,
-            criarProdutoDto.Preco,
-            criarProdutoDto.QuantidadeEstoque
-        );
+        var produto = await ObterOuFalharAsync(id);
 
-        if (!criarProdutoDto.Ativo)
-            produto.Desativar();
+        produto.Atualizar(dto.Nome, dto.Descricao, dto.Preco);
 
-        await _produtoRepository.AdicionarAsync(produto);
-
-        return MapearParaResponse(produto);
-    }
-
-    public async Task<ProdutoResponseDto> AtualizarAsync(int id, AtualizarProdutoDto atualizarProdutoDto)
-    {
-        var produto = await ObterProdutoAsync(id);
-
-        produto.Atualizar(atualizarProdutoDto.Nome, atualizarProdutoDto.Descricao, atualizarProdutoDto.Preco);
-
-        if (atualizarProdutoDto.Ativo)
+        if (dto.Ativo)
             produto.Ativar();
         else
             produto.Desativar();
 
-        await _produtoRepository.AtualizarAsync(produto);
+        await _produtos.SalvarAsync();
 
-        return MapearParaResponse(produto);
+        _logger.LogInformation("Produto {ProdutoId} atualizado", id);
+        return produto.ToResponse();
     }
 
-    public async Task RemoverAsync(int id)
+    public async Task DesativarAsync(int id)
     {
-        var produto = await ObterProdutoAsync(id);
+        var produto = await ObterOuFalharAsync(id);
 
-        await _produtoRepository.RemoverAsync(produto);
+        produto.Desativar();
+        await _produtos.SalvarAsync();
+
+        _logger.LogInformation("Produto {ProdutoId} desativado", id);
     }
 
-    private async Task<Produto> ObterProdutoAsync(int id)
-    {
-        var produto = await _produtoRepository.BuscarPorIdAsync(id);
-
-        if (produto is null)
-            throw new NotFoundException("Produto não encontrado.");
-
-        return produto;
-    }
+    private async Task<Produto> ObterOuFalharAsync(int id)
+        => await _produtos.BuscarPorIdAsync(id)
+           ?? throw new NotFoundException($"Produto não encontrado.");
 }

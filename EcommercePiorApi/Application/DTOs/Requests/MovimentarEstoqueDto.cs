@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace PiorEcommerceDoMundo;
+namespace EcommercePiorApi.Application.DTOs.Requests;
 
 public class MovimentarEstoqueDto
 {
