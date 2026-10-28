@@ -14,6 +14,9 @@ public class EstoqueController : ControllerBase
     }
 
     [HttpGet]
+    [EndpointDescription("Lista todos os produtos com suas quantidades em estoque.")]
+    [ProducesResponseType(typeof(List<EstoqueResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<List<EstoqueResponseDto>>> ListarAsync()
     {
         var estoque = await _estoqueService.ListarAsync();
@@ -22,6 +25,10 @@ public class EstoqueController : ControllerBase
     }
 
     [HttpPost("{produtoId:int}/baixar")]
+    [EndpointDescription("Baixa o estoque de um produto.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> BaixarAsync(
     int produtoId,
     [FromBody] MovimentarEstoqueDto dto)
@@ -32,6 +39,10 @@ public class EstoqueController : ControllerBase
     }
 
     [HttpPost("{produtoId:int}/reabastecer")]
+    [EndpointDescription("Reabastece o estoque de um produto.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ReabastecerAsync(
     int produtoId,
     [FromBody] MovimentarEstoqueDto dto)

@@ -11,8 +11,8 @@ public class CriarProdutoDto
     ErrorMessage = "O preço deve ser maior ou igual a R$ 0,01.")]
     public decimal Preco { get; set; }
 
-[Range(0, int.MaxValue,
-    ErrorMessage = "A quantidade em estoque não pode ser negativa.")]
+    [Range(0, int.MaxValue,
+        ErrorMessage = "A quantidade em estoque não pode ser negativa.")]
     public int QuantidadeEstoque { get; set; }
     public bool Ativo { get; set; } = true;
 }

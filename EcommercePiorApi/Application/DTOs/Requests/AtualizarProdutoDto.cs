@@ -5,8 +5,11 @@ namespace PiorEcommerceDoMundo;
 public class AtualizarProdutoDto
 {
     [Required(ErrorMessage = "O nome é obrigatório.")]
-    public string Nome { get; set; }
-    public string Descricao { get; set; }
+    public string Nome { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "A descrição é obrigatoria")]
+    public string Descricao { get; set; } = string.Empty;
+    
     [Range(typeof(decimal), "0.01", "79228162514264337593543950335",
     ErrorMessage = "O preço deve ser maior ou igual a R$ 0,01.")]
     public decimal Preco { get; set; }

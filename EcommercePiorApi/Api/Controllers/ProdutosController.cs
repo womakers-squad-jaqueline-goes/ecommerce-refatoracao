@@ -14,6 +14,9 @@ public class ProdutosController : ControllerBase
     }
 
     [HttpGet]
+    [EndpointDescription("Lista todos os produtos com suas quantidades em estoque.")]
+    [ProducesResponseType(typeof(List<EstoqueResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<List<ProdutoResponseDto>>> ListarAsync()
     {
         var produtos = await _produtoService.ListarAsync();
