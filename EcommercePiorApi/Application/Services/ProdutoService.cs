@@ -33,12 +33,7 @@ public class ProdutoService : IProdutoService
 
     public async Task<ProdutoResponseDto> BuscarPorIdAsync(int id)
     {
-        var produto = await _produtoRepository.BuscarPorIdAsync(id);
-
-        if (produto == null)
-        {
-            throw new NotFoundException("Produto não encontrado.");
-        }
+        var produto = await ObterProdutoAsync(id);
 
         return MapearParaResponse(produto);
     }
@@ -46,13 +41,15 @@ public class ProdutoService : IProdutoService
     public async Task<ProdutoResponseDto> CriarAsync(CriarProdutoDto criarProdutoDto)
     {
         var produto = new Produto
-        {
-            Nome = criarProdutoDto.Nome,
-            Descricao = criarProdutoDto.Descricao,
-            Preco = criarProdutoDto.Preco,
-            QuantidadeEstoque = criarProdutoDto.QuantidadeEstoque,
-            Ativo = criarProdutoDto.Ativo
-        };
+        (
+            criarProdutoDto.Nome,
+            criarProdutoDto.Descricao,
+            criarProdutoDto.Preco,
+            criarProdutoDto.QuantidadeEstoque
+        );
+
+        if (!criarProdutoDto.Ativo)
+            produto.Desativar();
 
         await _produtoRepository.AdicionarAsync(produto);
 
@@ -61,18 +58,14 @@ public class ProdutoService : IProdutoService
 
     public async Task<ProdutoResponseDto> AtualizarAsync(int id, AtualizarProdutoDto atualizarProdutoDto)
     {
-        var produto = await _produtoRepository.BuscarPorIdAsync(id);
+        var produto = await ObterProdutoAsync(id);
 
-        if (produto == null)
-        {
-            throw new NotFoundException("Produto não encontrado.");
-        }
+        produto.Atualizar(atualizarProdutoDto.Nome, atualizarProdutoDto.Descricao, atualizarProdutoDto.Preco);
 
-        produto.Nome = atualizarProdutoDto.Nome;
-        produto.Descricao = atualizarProdutoDto.Descricao;
-        produto.Preco = atualizarProdutoDto.Preco;
-        produto.QuantidadeEstoque = atualizarProdutoDto.QuantidadeEstoque;
-        produto.Ativo = atualizarProdutoDto.Ativo;
+        if (atualizarProdutoDto.Ativo)
+            produto.Ativar();
+        else
+            produto.Desativar();
 
         await _produtoRepository.AtualizarAsync(produto);
 
@@ -81,13 +74,18 @@ public class ProdutoService : IProdutoService
 
     public async Task RemoverAsync(int id)
     {
-        var produto = await _produtoRepository.BuscarPorIdAsync(id);
-
-        if (produto == null)
-        {
-            throw new NotFoundException("Produto não encontrado.");
-        }
+        var produto = await ObterProdutoAsync(id);
 
         await _produtoRepository.RemoverAsync(produto);
+    }
+
+    private async Task<Produto> ObterProdutoAsync(int id)
+    {
+        var produto = await _produtoRepository.BuscarPorIdAsync(id);
+
+        if (produto is null)
+            throw new NotFoundException("Produto não encontrado.");
+
+        return produto;
     }
 }

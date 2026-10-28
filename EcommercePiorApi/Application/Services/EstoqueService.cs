@@ -23,35 +23,30 @@ public class EstoqueService : IEstoqueService
 
     public async Task BaixarAsync(int produtoId, MovimentarEstoqueDto dto)
     {
-        var produto = await _produtoRepository.BuscarPorIdAsync(produtoId);
+        var produto = await ObterProdutoAsync(produtoId);
 
-        if (produto == null)
-            throw new NotFoundException("Produto não encontrado.");
-
-        if (dto.Quantidade <= 0)
-            throw new DomainException("A quantidade deve ser maior que zero.");
-
-        if (dto.Quantidade > produto.QuantidadeEstoque)
-            throw new DomainException("Estoque insuficiente.");
-
-        produto.QuantidadeEstoque -= dto.Quantidade;
+        produto.DiminuirEstoque(dto.Quantidade);
 
         await _produtoRepository.AtualizarAsync(produto);
     }
 
     public async Task ReabastecerAsync(int produtoId, MovimentarEstoqueDto dto)
     {
+        var produto = await ObterProdutoAsync(produtoId);
+
+        produto.ReabastecerEstoque(dto.Quantidade);
+
+        await _produtoRepository.AtualizarAsync(produto);
+    }
+
+    private async Task<Produto> ObterProdutoAsync(int produtoId)
+    {
         var produto = await _produtoRepository.BuscarPorIdAsync(produtoId);
 
         if (produto == null)
             throw new NotFoundException("Produto não encontrado.");
 
-        if (dto.Quantidade <= 0)
-            throw new DomainException("A quantidade deve ser maior que zero.");
-
-        produto.QuantidadeEstoque += dto.Quantidade;
-
-        await _produtoRepository.AtualizarAsync(produto);
+        return produto;
     }
 
 
