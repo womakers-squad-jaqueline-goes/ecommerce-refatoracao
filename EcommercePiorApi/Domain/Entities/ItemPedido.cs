@@ -1,4 +1,4 @@
-using PiorEcommerceDoMundo;
+using EcommercePiorApi.Domain.Exceptions;
 
 namespace EcommercePiorApi.Domain.Entities;
 
@@ -11,11 +11,6 @@ public class ItemPedido
     public Produto Produto { get; private set; } = null!;
     public int Quantidade { get; private set; }
     public decimal PrecoUnitario { get; private set; }
-
-    public decimal CalcularSubtotal()
-    {
-        return Quantidade * PrecoUnitario;
-    }
 
     private ItemPedido() { }
 
@@ -32,6 +27,6 @@ public class ItemPedido
         Quantidade = quantidade;
         PrecoUnitario = produto.Preco;
     }
-
+    public decimal CalcularSubtotal() => Quantidade * PrecoUnitario;
 
 }

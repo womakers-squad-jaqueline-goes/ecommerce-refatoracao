@@ -1,23 +1,26 @@
 using EcommercePiorApi.Domain.Enums;
-using PiorEcommerceDoMundo;
+using EcommercePiorApi.Domain.Exceptions;
 
 namespace EcommercePiorApi.Domain.Entities;
 
 public class Pedido
 {
+    private readonly List<ItemPedido> _itens = new();
+
     public int Id { get; private set; }
     public string ClienteNome { get; private set; } = string.Empty;
     public string ClienteEmail { get; private set; } = string.Empty;
     public DateTime DataPedido { get; private set; }
-    public StatusPedido StatusPedido { get; private set; } = StatusPedido.Pendente;
-    public decimal ValorTotal { get; private set; }
+    public StatusPedido Status { get; private set; } = StatusPedido.Pendente;
     public FormaPagamento FormaPagamento { get; private set; }
+    public decimal Desconto { get; private set; }
+    public decimal ValorTotal { get; private set; }
     public string? CodigoRastreio { get; private set; }
-    public List<ItemPedido> Itens { get; private set; } = new();
+    public IReadOnlyCollection<ItemPedido> Itens => _itens;
 
     private Pedido() { }
 
-    internal Pedido(string clienteNome, string clienteEmail, FormaPagamento formaPagamento)
+    public static Pedido Criar(string clienteNome, string clienteEmail, FormaPagamento formaPagamento)
     {
         if (string.IsNullOrWhiteSpace(clienteNome))
             throw new DomainException("O nome do cliente é obrigatório.");
@@ -25,27 +28,90 @@ public class Pedido
         if (string.IsNullOrWhiteSpace(clienteEmail))
             throw new DomainException("O email do cliente é obrigatório.");
 
-        if (!Enum.IsDefined(typeof(FormaPagamento), formaPagamento))
+        if (!Enum.IsDefined(formaPagamento))
             throw new DomainException("A forma de pagamento é inválida.");
 
-        ClienteNome = clienteNome;
-        ClienteEmail = clienteEmail;
-        DataPedido = DateTime.UtcNow;
-        FormaPagamento = formaPagamento;
+        return new Pedido
+        {
+            ClienteNome = clienteNome.Trim(),
+            ClienteEmail = clienteEmail.Trim(),
+            FormaPagamento = formaPagamento,
+            DataPedido = DateTime.UtcNow,
+            Status = StatusPedido.Pendente
+        };
     }
 
     public void AdicionarItem(Produto produto, int quantidade)
     {
-        if (StatusPedido != StatusPedido.Pendente)
+        if (Status != StatusPedido.Pendente)
             throw new DomainException("Não é possível adicionar itens a um pedido que não está pendente.");
 
-        var itemExistente = new ItemPedido(produto, quantidade);
-        Itens.Add(itemExistente);
-        RecalcularValorTotal();
+        if (produto is null)
+            throw new DomainException("O produto é obrigatório.");
+
+        if (!produto.Ativo)
+            throw new DomainException($"O produto {produto.Nome} está inativo.");
+
+        produto.DiminuirEstoque(quantidade); // valida quantidade e estoque
+        _itens.Add(new ItemPedido(produto, quantidade));
     }
 
-    private void RecalcularValorTotal()
+    public void AplicarDesconto(decimal valor)
     {
-        ValorTotal = Itens.Sum(i => i.CalcularSubtotal());
+        if (valor < 0 || valor > Subtotal)
+            throw new DomainException("O desconto é inválido para o valor do pedido.");
+
+        Desconto = valor;
     }
+
+        public void MarcarComoPago()
+    {
+        GarantirStatus(StatusPedido.Pendente, "pago");
+        Status = StatusPedido.Pago;
+    }
+
+    public void MarcarComoFalhou()
+    {
+        GarantirStatus(StatusPedido.Pendente, "marcado como falho");
+
+        foreach (var item in _itens)
+            item.Produto.ReabastecerEstoque(item.Quantidade);
+
+        Status = StatusPedido.Falhou;
+    }
+
+    public void ReabrirParaPagamento()
+    {
+        GarantirStatus(StatusPedido.Falhou, "reaberto para pagamento");
+
+        foreach (var item in _itens)
+            item.Produto.DiminuirEstoque(item.Quantidade);
+
+        Status = StatusPedido.Pendente;
+    }
+
+    public void GarantirPodeSerEnviado()
+    {
+        if (Status is not (StatusPedido.Pago or StatusPedido.Enviado))
+            throw new DomainException($"O pedido está '{Status}' e não pode ser enviado.");
+    }
+
+    public void RegistrarEnvio(string codigoRastreio)
+    {
+        GarantirPodeSerEnviado();
+
+        if (string.IsNullOrWhiteSpace(codigoRastreio))
+            throw new DomainException("O código de rastreio é obrigatório.");
+
+        CodigoRastreio = codigoRastreio;
+        Status = StatusPedido.Enviado;
+    }
+
+    private void GarantirStatus(StatusPedido esperado, string acao)
+    {
+        if (Status != esperado)
+            throw new DomainException($"O pedido está '{Status}' e não pode ser {acao}.");
+    }
+
+    public decimal Subtotal => _itens.Sum(i => i.CalcularSubtotal());
 }

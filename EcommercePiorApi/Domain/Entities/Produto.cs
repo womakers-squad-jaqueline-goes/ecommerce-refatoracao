@@ -1,4 +1,4 @@
-using PiorEcommerceDoMundo;
+using EcommercePiorApi.Domain.Exceptions;
 
 namespace EcommercePiorApi.Domain.Entities;
 
@@ -13,7 +13,7 @@ public class Produto
 
     private Produto() { }
 
-    internal Produto(string nome, string descricao, decimal preco, int quantidadeEstoque)
+    public static Produto Criar(string nome, string descricao, decimal preco, int quantidadeEstoque)
     {
         ValidarNome(nome);
         ValidarDescricao(descricao);
@@ -22,10 +22,13 @@ public class Produto
         if (quantidadeEstoque < 0)
             throw new DomainException("A quantidade em estoque não pode ser negativa.");
 
-        Nome = nome;
-        Descricao = descricao;
-        Preco = preco;
-        QuantidadeEstoque = quantidadeEstoque;
+        return new Produto
+        {
+            Nome = nome.Trim(),
+            Descricao = descricao.Trim(),
+            Preco = preco,
+            QuantidadeEstoque = quantidadeEstoque
+        };
     }
 
     public void Atualizar(string nome, string descricao, decimal preco)
@@ -34,8 +37,8 @@ public class Produto
         ValidarDescricao(descricao);
         ValidarPreco(preco);
 
-        Nome = nome;
-        Descricao = descricao;
+        Nome = nome.Trim();
+        Descricao = descricao.Trim();
         Preco = preco;
     }
 
@@ -62,19 +65,19 @@ public class Produto
 
     public void Desativar() => Ativo = false;
 
-    private void ValidarNome(string nome)
+    private static void ValidarNome(string nome)
     {
         if (string.IsNullOrWhiteSpace(nome))
             throw new DomainException("O nome do produto é obrigatório.");
     }
 
-    private void ValidarDescricao(string descricao)
+    private static void ValidarDescricao(string descricao)
     {
         if (string.IsNullOrWhiteSpace(descricao))
             throw new DomainException("A descrição do produto é obrigatória.");
     }
 
-    private void ValidarPreco(decimal preco)
+    private static void ValidarPreco(decimal preco)
     {
         if (preco <= 0)
             throw new DomainException("O preço do produto deve ser maior que zero.");
