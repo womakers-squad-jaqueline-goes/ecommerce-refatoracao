@@ -1,5 +1,4 @@
-namespace PiorEcommerceDoMundo;
-
+namespace EcommercePiorApi.Application.DTOs.Responses;
 public class EstoqueResponseDto
 {
     public int ProdutoId { get; set; }

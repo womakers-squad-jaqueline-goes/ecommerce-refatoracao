@@ -1,45 +1,33 @@
+// Controllers/EstoqueController.cs
+using EcommercePiorApi.Application.DTOs.Requests;
+using EcommercePiorApi.Application.DTOs.Responses;
+using EcommercePiorApi.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
-namespace PiorEcommerceDoMundo;
+namespace EcommercePiorApi.Controllers;
 
 [ApiController]
 [Route("api/estoque")]
 public class EstoqueController : ControllerBase
 {
-    private readonly IEstoqueService _estoqueService;
+    private readonly IEstoqueService _estoque;
 
-    public EstoqueController(IEstoqueService estoqueService)
+    public EstoqueController(IEstoqueService estoque)
     {
-        _estoqueService = estoqueService;
+        _estoque = estoque;
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<EstoqueResponseDto>>> ListarAsync()
-    {
-        var estoque = await _estoqueService.ListarAsync();
-
-        return Ok(estoque);
-    }
-
-    [HttpPost("{produtoId:int}/baixar")]
-    public async Task<IActionResult> BaixarAsync(
-    int produtoId,
-    [FromBody] MovimentarEstoqueDto dto)
-    {
-        await _estoqueService.BaixarAsync(produtoId, dto);
-
-        return NoContent();
-    }
+    public async Task<ActionResult<List<EstoqueResponseDto>>> Listar()
+        => Ok(await _estoque.ListarAsync());
 
     [HttpPost("{produtoId:int}/reabastecer")]
-    public async Task<IActionResult> ReabastecerAsync(
-    int produtoId,
-    [FromBody] MovimentarEstoqueDto dto)
-    {
-        await _estoqueService.ReabastecerAsync(produtoId, dto);
+    public async Task<ActionResult<EstoqueResponseDto>> Reabastecer(
+        int produtoId, [FromBody] MovimentarEstoqueDto dto)
+        => Ok(await _estoque.ReabastecerAsync(produtoId, dto.Quantidade));
 
-        return NoContent();
-    }
-
-    
+    [HttpPost("{produtoId:int}/baixar")]
+    public async Task<ActionResult<EstoqueResponseDto>> Baixar(
+        int produtoId, [FromBody] MovimentarEstoqueDto dto)
+        => Ok(await _estoque.BaixarAsync(produtoId, dto.Quantidade));
 }

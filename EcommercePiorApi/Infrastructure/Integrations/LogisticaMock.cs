@@ -1,14 +1,25 @@
-﻿using EcommercePiorApi.Domain.Entities;
+﻿using EcommercePiorApi.Application.Interfaces;
+using EcommercePiorApi.Domain.Entities;
 
 namespace EcommercePiorApi.Infrastructure.Integrations;
 
-// "integracao" com logistica que na verdade so espera um pouco e devolve um codigo aleatorio
-public static class LogisticaMock
+public class LogisticaMock : ILogisticaService
 {
-    public static async Task<string> EnviarAsync(Pedido pedido)
+    private const int LatenciaMs = 300;
+
+    private readonly ILogger<LogisticaMock> _logger;
+
+    public LogisticaMock(ILogger<LogisticaMock> logger)
     {
-        Console.WriteLine("Enviando pedido " + pedido.Id + " para a transportadora parceira...");
-        await Task.Delay(300); // simula latencia da api externa de logistica
-        return Utils.GerarCodigoRastreio();
+        _logger = logger;
+    }
+
+    public async Task<string> EnviarAsync(Pedido pedido)
+    {
+        _logger.LogInformation("Enviando pedido {PedidoId} para a transportadora", pedido.Id);
+
+        await Task.Delay(LatenciaMs);
+
+        return "BR" + Random.Shared.Next(100_000, 1_000_000); 
     }
 }

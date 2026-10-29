@@ -1,6 +1,6 @@
-namespace PiorEcommerceDoMundo;
+namespace EcommercePiorApi.Domain.Exceptions;
 
-public class NotFoundException : Exception
+public class NotFoundException : DomainException
 {
     public NotFoundException(string mensagem) : base(mensagem)
     {

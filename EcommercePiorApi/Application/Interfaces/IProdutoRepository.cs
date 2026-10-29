@@ -1,12 +1,12 @@
+// Application/Interfaces/IProdutoRepository.cs
 using EcommercePiorApi.Domain.Entities;
 
-namespace PiorEcommerceDoMundo;
+namespace EcommercePiorApi.Application.Interfaces;
 
 public interface IProdutoRepository
 {
     Task<List<Produto>> ListarAsync();
     Task<Produto?> BuscarPorIdAsync(int id);
-    Task AdicionarAsync(Produto produto);
-    Task AtualizarAsync(Produto produto);
-    Task RemoverAsync(Produto produto);
+    void Adicionar(Produto produto);
+    Task SalvarAsync();
 }

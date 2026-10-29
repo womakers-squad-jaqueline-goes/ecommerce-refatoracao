@@ -1,50 +1,46 @@
+// Controllers/ProdutosController.cs
+using EcommercePiorApi.Application.DTOs.Requests;
+using EcommercePiorApi.Application.DTOs.Responses;
+using EcommercePiorApi.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
-namespace PiorEcommerceDoMundo;
+namespace EcommercePiorApi.Controllers;
 
 [ApiController]
 [Route("api/produtos")]
 public class ProdutosController : ControllerBase
 {
-    private readonly IProdutoService _produtoService;
+    private readonly IProdutoService _produtos;
 
-    public ProdutosController(IProdutoService produtoService)
+    public ProdutosController(IProdutoService produtos)
     {
-        _produtoService = produtoService;
+        _produtos = produtos;
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<ProdutoResponseDto>>> ListarAsync()
-    {
-        var produtos = await _produtoService.ListarAsync();
-        return Ok(produtos);
-    }
+    public async Task<ActionResult<List<ProdutoResponseDto>>> Listar()
+        => Ok(await _produtos.ListarAsync());
+
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<ProdutoResponseDto>> BuscarPorId(int id)
+        => Ok(await _produtos.BuscarPorIdAsync(id));
 
     [HttpPost]
-    public async Task<ActionResult<ProdutoResponseDto>> CriarAsync([FromBody] CriarProdutoDto criarProdutoDto)
+    public async Task<ActionResult<ProdutoResponseDto>> Criar([FromBody] CriarProdutoDto dto)
     {
-        var produto = await _produtoService.CriarAsync(criarProdutoDto);
-        return CreatedAtRoute("BuscarProdutoPorId", new { id = produto.Id }, produto);
+        var produto = await _produtos.CriarAsync(dto);
+        return CreatedAtAction(nameof(BuscarPorId), new { id = produto.Id }, produto);
     }
 
-    [HttpGet("{id:int}", Name = "BuscarProdutoPorId")]
-    public async Task<ActionResult<ProdutoResponseDto>> BuscarPorIdAsync(int id)
-    {
-        var produto = await _produtoService.BuscarPorIdAsync(id);
-        return Ok(produto);
-    }
+    [HttpPut("{id:int}")]
+    public async Task<ActionResult<ProdutoResponseDto>> Atualizar(int id, [FromBody] AtualizarProdutoDto dto)
+        => Ok(await _produtos.AtualizarAsync(id, dto));
 
-    [HttpPut("{id}")]
-    public async Task<ActionResult<ProdutoResponseDto>> AtualizarAsync(int id, [FromBody] AtualizarProdutoDto atualizarProdutoDto)
+    /// <summary>Exclusão lógica: o produto é desativado, para não perder o histórico dos pedidos.</summary>
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Desativar(int id)
     {
-        var produto = await _produtoService.AtualizarAsync(id, atualizarProdutoDto);
-        return Ok(produto);
-    }
-
-    [HttpDelete("{id}")]
-    public async Task<ActionResult> RemoverAsync(int id)
-    {
-        await _produtoService.RemoverAsync(id);
+        await _produtos.DesativarAsync(id);
         return NoContent();
     }
 }
