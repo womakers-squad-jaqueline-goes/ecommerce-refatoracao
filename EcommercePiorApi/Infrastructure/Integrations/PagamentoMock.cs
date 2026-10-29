@@ -1,21 +1,33 @@
+// Infrastructure/Integrations/PagamentoMock.cs
+using EcommercePiorApi.Application.Interfaces;
+using EcommercePiorApi.Domain.Enums;
+using Microsoft.Extensions.Options;
+
 namespace EcommercePiorApi.Infrastructure.Integrations;
 
-// "servico" de pagamento que na verdade eh so uma classe estatica mockada
-public static class PagamentoMock
+/// <summary>Simula o gateway de pagamento: espera um pouco e pode recusar compras no cartão.</summary>
+public class PagamentoMock : IPagamentoService
 {
-    public static bool ProcessarPagamento(decimal valor, string formaPagamento)
+    private const int LatenciaMs = 500;
+
+    private readonly ILogger<PagamentoMock> _logger;
+    private readonly PagamentoMockOptions _options;
+
+    public PagamentoMock(ILogger<PagamentoMock> logger, IOptions<PagamentoMockOptions> options)
     {
-        Console.WriteLine("Processando pagamento de " + valor + " via " + formaPagamento);
-        Thread.Sleep(500); // simula demora do gateway de pagamento, bloqueando a thread mesmo
+        _logger = logger;
+        _options = options.Value;
+    }
 
-        var random = new Random();
-        var sorteio = random.Next(0, 100);
+    public async Task<bool> ProcessarPagamentoAsync(decimal valor, FormaPagamento formaPagamento)
+    {
+        _logger.LogInformation("Processando pagamento de {Valor} via {Forma}", valor, formaPagamento);
 
-        // regra de negocio critica decidida no sorteio de um numero aleatorio
-        if (formaPagamento == "cartao" && sorteio < 10)
-        {
-            return false;
-        }
-        return true;
+        await Task.Delay(LatenciaMs); 
+
+        if (formaPagamento != FormaPagamento.Cartao)
+            return true;
+
+        return Random.Shared.NextDouble() >= _options.TaxaRecusaCartao;
     }
 }

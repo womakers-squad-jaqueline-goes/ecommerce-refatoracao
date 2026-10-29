@@ -18,6 +18,19 @@ com alguns produtos de exemplo já cadastrados. Swagger disponível em `/swagger
 http://localhost:5000/swagger/index.html
 ```
 
+## Simulação de pagamento
+
+O pagamento usa `IPagamentoService`, implementado por `PagamentoMock`.
+
+O campo `formaPagamento` permite reproduzir os cenários:
+- `"cartao"`: pagamento aprovado.
+- `"recusar"`: pagamento recusado.
+
+O mock aprova qualquer valor diferente de `"recusar"`, sem diferenciar
+maiúsculas de minúsculas. Essa convenção serve apenas para simulação.
+
+O processamento é assíncrono, com uma espera simulada de 500 ms.
+
 ## Domínios cobertos
 
 - CRUD de produtos
@@ -26,7 +39,7 @@ http://localhost:5000/swagger/index.html
 - Pagamento mockado (`PagamentoMock`)
 - Logística mockada (`LogisticaMock`, gera código de rastreio)
 
-O projeto continua em um único `.csproj`, mas a estrutura de pastas separa API, Application, Domain e Infrastructure. Consulte o `README.md` na raiz do repositório para ver as convenções do grupo.
+Tudo isso vive no mesmo projeto, sem separação por domínio.
 
 ## Problemas propositais (para as alunas encontrarem e corrigirem)
 
